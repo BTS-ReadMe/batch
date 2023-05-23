@@ -1,37 +1,50 @@
+server:
+  port: 8091
+
 spring:
+  application:
+    name: batch-service
   data:
     web:
       pageable:
         default-page-size: 12
     mongodb:
-      host: localhost
+      host: 172.18.0.6
       port: 27017
-      authentication-database: admin
-      username: jin
-      password: 1234
+      authentication-database: sections
+      username: bts
+      password: bts1234
       database: sections
-      uri: mongodb://localhost:27017/sections
-  batch:
-    job:
-      enabled=false:
+      uri: mongodb://bts:bts1234@172.18.0.6:27017/sections
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: 1234
-    url: jdbc:mysql://localhost:3306/sections?serverTimezone=Asia/Seoul
+    password: bts1234bts
+    url: jdbc:mysql://ec2-43-200-189-164.ap-northeast-2.compute.amazonaws.com/sections?serverTimezone=Asia/Seoul
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     generate-ddl: true
-    show-sql: 'true'
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
         format_sql: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: 172.18.0.101:9092
     consumer:
       auto-offset-reset: earliest
+
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://43.200.189.164:8761/eureka
 
 logging:
   level:
