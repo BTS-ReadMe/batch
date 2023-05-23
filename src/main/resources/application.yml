@@ -15,7 +15,7 @@ spring:
       username: bts
       password: bts1234
       database: sections
-      uri: mongodb://bts:bts1234@172.18.0.6:27017/sections
+      uri: mongodb://ec2-43-200-189-164.ap-northeast-2.compute.amazonaws.com/sections
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
