@@ -1,0 +1,43 @@
+spring:
+  data:
+    web:
+      pageable:
+        default-page-size: 12
+    mongodb:
+      host: localhost
+      port: 27017
+      authentication-database: admin
+      username: jin
+      password: 1234
+      database: sections
+      uri: mongodb://localhost:27017/sections
+  batch:
+    job:
+      enabled=false:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 1234
+    url: jdbc:mysql://localhost:3306/sections?serverTimezone=Asia/Seoul
+  jpa:
+    hibernate:
+      ddl-auto: create
+    generate-ddl: true
+    show-sql: 'true'
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5Dialect
+        format_sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      auto-offset-reset: earliest
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb:
+            core:
+              MongoTemplate: DEBUG
