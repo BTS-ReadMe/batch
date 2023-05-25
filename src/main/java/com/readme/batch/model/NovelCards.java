@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -11,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "novel_cards")
 @Getter
 @NoArgsConstructor
+@ToString
 public class NovelCards {
 
     @Id
@@ -43,5 +45,9 @@ public class NovelCards {
 
         private Long id;
         private String name;
+    }
+
+    public void updateViewCount(long views) {
+        this.views += views;
     }
 }
