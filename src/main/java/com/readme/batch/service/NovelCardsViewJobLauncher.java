@@ -45,7 +45,7 @@ public class NovelCardsViewJobLauncher {
             .addLong("timestamp", System.currentTimeMillis())
             .toJobParameters();
         JobExecution jobExecution = jobLauncher.run(
-            novelCardsViewsJobService.novelCardsViewsJob(), jobParameters);
+            novelCardsViewsJobService.novelCardsViewsJob(null), jobParameters);
         log.info("Job Execution: " + jobExecution.getStatus());
         log.info("Job getJobConfigurationName: " + jobExecution.getJobConfigurationName());
         log.info("Job getJobId: " + jobExecution.getJobId());
@@ -74,7 +74,7 @@ public class NovelCardsViewJobLauncher {
                 .addLong("timestamp", System.currentTimeMillis())
                 .toJobParameters();
             JobExecution jobExecution = jobLauncher.run(
-                novelCardsViewsJobService.novelCardsViewsJob(), jobParameters);
+                novelCardsViewsJobService.novelCardsViewsJob(null), jobParameters);
 //            log.info("Job Execution: " + jobExecution.getStatus());
 //            log.info("Job getJobConfigurationName: " + jobExecution.getJobConfigurationName());
 //            log.info("Job getJobId: " + jobExecution.getJobId());

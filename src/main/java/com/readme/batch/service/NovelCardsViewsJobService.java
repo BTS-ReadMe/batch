@@ -15,6 +15,9 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.core.job.flow.support.SimpleFlow;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -24,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -52,17 +56,34 @@ public class NovelCardsViewsJobService {
     }
 
     @Bean
-    public Job novelCardsViewsJob() throws Exception {
+    public Job novelCardsViewsJob(Flow episodeViewsFlow) throws Exception {
         return jobBuilderFactory.get("novelCardsViewsJob")
+            .start(doItParallelSteps())
+            .build().build();
+    }
+
+    @Bean Flow novelCardsViewsFlow() throws Exception {
+        return new FlowBuilder<SimpleFlow>("novelCardsViewsFlow")
             .start(novelCardsViewsStep())
-            .next(episodeViewsStep())
             .build();
     }
 
+    @Bean
+    public Flow episodeViewsFlow() throws Exception {
+        return new FlowBuilder<SimpleFlow>("episodeViewsFlow")
+            .start(episodeViewsStep())
+            .build();
+    }
+
+    @Bean Flow doItParallelSteps() throws Exception {
+        return new FlowBuilder<Flow>("doItParallelSteps")
+            .split(new SimpleAsyncTaskExecutor())
+            .add(novelCardsViewsFlow(), episodeViewsFlow()) // 동시에 실행될 flow 들을 넣어줍니다.
+            .build();
+    }
 
     @Bean
-//    @JobScope
-    @JobScope
+    @Scope("singleton")
     public Step novelCardsViewsStep() throws Exception {
         try {
             return stepBuilderFactory.get("novelCardsViewsStep")
@@ -80,7 +101,7 @@ public class NovelCardsViewsJobService {
     }
 
     @Bean
-    @JobScope
+    @Scope("singleton")
     public Step episodeViewsStep() throws Exception {
         try {
             return stepBuilderFactory.get("episodeViewsStep")
