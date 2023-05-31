@@ -42,15 +42,6 @@ public class NovelCardsViewsJobService {
     private final MongoTemplate mongoTemplate;
 
     @Bean
-    public TaskExecutor taskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(20);
-        executor.setQueueCapacity(100);
-        return executor;
-    }
-
-    @Bean
     public Job NovelCardsViewsJob() throws Exception{
         try {
             return jobBuilderFactory.get("novelCardsViewsJob")
@@ -69,11 +60,10 @@ public class NovelCardsViewsJobService {
     public Step novelCardsViewsStep() throws Exception {
         try {
             return stepBuilderFactory.get("novelCardsViewsStep")
-                .<NovelCards, NovelCards> chunk(500) // 앞의 NovelCards는 read에서 읽은 아이템의 타입, 뒤의 NovelCards는 write에게 전달할 아이템의 타입
+                .<NovelCards, NovelCards> chunk(1) // 앞의 NovelCards는 read에서 읽은 아이템의 타입, 뒤의 NovelCards는 write에게 전달할 아이템의 타입
                 .reader(reader(null))
                 .processor(processor(null))
                 .writer(writer())
-                .taskExecutor(taskExecutor())
                 .build();
         } catch (EmptyResultDataAccessException e) {
             throw new RuntimeException(e);
@@ -83,23 +73,27 @@ public class NovelCardsViewsJobService {
 
     @Bean
     @StepScope
-    public MongoItemReader reader(@Value("#{jobParameters['novelId']}") Long novelId) throws Exception {
-        try{
-            Map<String, Direction> sortOptions = new HashMap<>();
-            Query query = new Query();
-            query.addCriteria(Criteria.where("_id").is(String.valueOf(novelId)));
-            sortOptions.put("_id", Direction.ASC);
-            MongoItemReader<NovelCards> mongoItemReader = new MongoItemReader<>();
-            mongoItemReader.open(new ExecutionContext());
-            mongoItemReader.setTemplate(mongoTemplate);
-            mongoItemReader.setCollection("novel_cards");
-            mongoItemReader.setTargetType(NovelCards.class);
-            mongoItemReader.setQuery(query);
-            mongoItemReader.close();
-            return mongoItemReader;
-        } catch (EmptyResultDataAccessException e) {
-            return null;
-        }
+    public ItemReader<NovelCards> reader(@Value("#{jobParameters['novelId']}") Long novelId) {
+        return new ItemReader<NovelCards>() {
+            private boolean readFlag = false;
+
+            @Override
+            public NovelCards read() throws Exception {
+                if (readFlag) {
+                    return null;
+                }
+
+                Query query = new Query();
+                query.addCriteria(Criteria.where("_id").is(String.valueOf(novelId)));
+                NovelCards result = mongoTemplate.findOne(query, NovelCards.class, "novel_cards");
+
+                if (result != null) {
+                    readFlag = true;
+                }
+
+                return result;
+            }
+        };
     }
 
     @Bean

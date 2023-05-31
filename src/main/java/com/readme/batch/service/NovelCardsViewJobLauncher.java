@@ -40,7 +40,7 @@ public class NovelCardsViewJobLauncher {
                 + requestPlusViewCount.getPlusCnt()));
     }
 
-    @Scheduled(fixedRate = 15000)
+    @Scheduled(fixedRate = 60000)
     public void listener() {
         Map<Long, ViewCountDTO> currentMessageCountMap = new HashMap<>(novelViewCountMap);
         log.info(currentMessageCountMap.toString());
@@ -56,14 +56,14 @@ public class NovelCardsViewJobLauncher {
                     .toJobParameters();
                 JobExecution jobExecution = jobLauncher.run(
                     novelCardsViewsJobService.NovelCardsViewsJob(), jobParameters);
-                log.info("Job Execution: " + jobExecution.getStatus());
-                log.info("Job getJobConfigurationName: " + jobExecution.getJobConfigurationName());
-                log.info("Job getJobId: " + jobExecution.getJobId());
-                log.info("Job getExitStatus: " + jobExecution.getExitStatus());
-                log.info("Job getJobInstance: " + jobExecution.getJobInstance());
-                log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
-                log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
-                log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
+//                log.info("Job Execution: " + jobExecution.getStatus());
+//                log.info("Job getJobConfigurationName: " + jobExecution.getJobConfigurationName());
+//                log.info("Job getJobId: " + jobExecution.getJobId());
+//                log.info("Job getExitStatus: " + jobExecution.getExitStatus());
+//                log.info("Job getJobInstance: " + jobExecution.getJobInstance());
+//                log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
+//                log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
+//                log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
