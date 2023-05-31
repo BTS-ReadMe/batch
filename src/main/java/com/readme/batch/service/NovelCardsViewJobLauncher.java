@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.readme.batch.dto.NovelViewDTO;
 import com.readme.batch.dto.ViewCountDTO;
 import com.readme.batch.requestObject.RequestPlusViewCount;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class NovelCardsViewJobLauncher {
     private final KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
     private final JobLauncher jobLauncher;
     private final NovelCardsViewsJobService novelCardsViewsJobService;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @KafkaListener(topics = "plusViewCount", groupId = "batch")
     public void plusViewCount(RequestPlusViewCount requestPlusViewCount) {
@@ -41,33 +43,40 @@ public class NovelCardsViewJobLauncher {
     }
 
     @Scheduled(fixedRate = 60000)
-    public void listener() {
+    public void listener() throws Exception {
         Map<Long, ViewCountDTO> currentMessageCountMap = new HashMap<>(novelViewCountMap);
-        log.info(currentMessageCountMap.toString());
-        novelViewCountMap.clear();
+        if (!currentMessageCountMap.isEmpty()) {
+            log.info(currentMessageCountMap.toString());
+            log.info("시작 시간: " + new Date());
+            String novelViewsMapStr = serializeNovelViewsMap(currentMessageCountMap);
+            novelViewCountMap.clear();
+            JobParameters jobParameters = new JobParametersBuilder()
+                .addString("novelViewsMapStr", novelViewsMapStr)
+                .addLong("timestamp", System.currentTimeMillis())
+                .toJobParameters();
+            JobExecution jobExecution = jobLauncher.run(
+                novelCardsViewsJobService.NovelCardsViewsJob(), jobParameters);
+            log.info("Job Execution: " + jobExecution.getStatus());
+            log.info("Job getJobConfigurationName: " + jobExecution.getJobConfigurationName());
+            log.info("Job getJobId: " + jobExecution.getJobId());
+            log.info("Job getExitStatus: " + jobExecution.getExitStatus());
+            log.info("Job getJobInstance: " + jobExecution.getJobInstance());
+            log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
+            log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
+            log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
+            log.info("종료 시간: " + new Date());
+        }
 
-        currentMessageCountMap.forEach((novelId, viewsCountDTO) -> {
-            try {
-                JobParameters jobParameters = new JobParametersBuilder()
-                    .addLong("novelId", novelId)
-                    .addLong("episodeId", viewsCountDTO.getEpisodeId())
-                    .addLong("views", viewsCountDTO.getViewCount())
-                    .addLong("timestamp", System.currentTimeMillis())
-                    .toJobParameters();
-                JobExecution jobExecution = jobLauncher.run(
-                    novelCardsViewsJobService.NovelCardsViewsJob(), jobParameters);
-//                log.info("Job Execution: " + jobExecution.getStatus());
-//                log.info("Job getJobConfigurationName: " + jobExecution.getJobConfigurationName());
-//                log.info("Job getJobId: " + jobExecution.getJobId());
-//                log.info("Job getExitStatus: " + jobExecution.getExitStatus());
-//                log.info("Job getJobInstance: " + jobExecution.getJobInstance());
-//                log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
-//                log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
-//                log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+    }
 
-        });
+    public String serializeNovelViewsMap(Map<Long, ViewCountDTO> novelViewsMap) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(novelViewsMap);
+    }
+
+    public static Map<Long, ViewCountDTO> deserializeNovelViewsMap(String novelViewsMapStr) throws IOException {
+        return objectMapper.readValue(novelViewsMapStr,
+            new TypeReference<Map<Long, ViewCountDTO>>() {
+            });
     }
 }
+
