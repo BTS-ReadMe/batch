@@ -42,6 +42,25 @@ public class NovelCardsViewJobLauncher {
                 + requestPlusViewCount.getPlusCnt()));
     }
 
+    public void plusViewJob(String plusViewString) throws Exception {
+        JobParameters jobParameters = new JobParametersBuilder()
+            .addString("novelViewsMapStr", plusViewString)
+            .addLong("timestamp", System.currentTimeMillis())
+            .toJobParameters();
+        JobExecution jobExecution = jobLauncher.run(
+            novelCardsViewsJobService.NovelCardsViewsJob(), jobParameters);
+        log.info("Job Execution: " + jobExecution.getStatus());
+        log.info("Job getJobConfigurationName: " + jobExecution.getJobConfigurationName());
+        log.info("Job getJobId: " + jobExecution.getJobId());
+        log.info("Job getExitStatus: " + jobExecution.getExitStatus());
+        log.info("Job getJobInstance: " + jobExecution.getJobInstance());
+        log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
+        log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
+        log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
+        log.info("종료 시간: " + new Date());
+
+    }
+
     @Scheduled(fixedRate = 60000)
     public void listener() throws Exception {
         Map<Long, ViewCountDTO> currentMessageCountMap = new HashMap<>(novelViewCountMap);

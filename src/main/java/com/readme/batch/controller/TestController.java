@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.readme.batch.model.NovelCards;
 import com.readme.batch.repository.NovelCardsRepository;
 import com.readme.batch.requestObject.RequestPlusViewCount;
+import com.readme.batch.requestObject.RequestPlusViewString;
 import com.readme.batch.service.NovelCardsViewJobLauncher;
 import com.readme.batch.service.Producer;
 import java.util.HashMap;
@@ -35,10 +36,10 @@ public class TestController {
     public void plusView(@RequestBody RequestPlusViewCount requestPlusViewCount) {
         producer.sendPlusView(requestPlusViewCount);
     }
-    @GetMapping("/1")
-    public void test1() {
-        String kafka = "";
-        novelCardsViewJobLauncher.listener();
+
+    @GetMapping("test-plus-view")
+    public void testPlusView(@RequestBody RequestPlusViewString requestPlusViewString) throws Exception {
+        novelCardsViewJobLauncher.plusViewJob(requestPlusViewString.getPlusViewString());
     }
 
     @GetMapping("/2")
