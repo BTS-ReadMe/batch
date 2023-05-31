@@ -1,5 +1,6 @@
 package com.readme.batch.dto;
 
+import com.readme.batch.requestObject.RequestPlusViewCount;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -7,10 +8,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class NovelViewDTO {
     private long novelId;
-    private long views;
+    private long episodeId;
+    private long plusCnt;
 
-    public NovelViewDTO(long novelId, long views) {
-        this.novelId = novelId;
-        this.views = views;
+    public NovelViewDTO(RequestPlusViewCount requestPlusViewCount) {
+        this.novelId = requestPlusViewCount.getNovelId();
+        this.episodeId = requestPlusViewCount.getEpisodeId();
+        this.plusCnt = requestPlusViewCount.getPlusCnt();
     }
 }

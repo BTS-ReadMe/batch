@@ -52,7 +52,6 @@ public class NovelCardsViewsJobService {
 
     @Bean
     public Job NovelCardsViewsJob() throws Exception{
-        log.info("test");
         try {
             return jobBuilderFactory.get("novelCardsViewsJob")
                 .incrementer(new RunIdIncrementer())

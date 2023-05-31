@@ -3,7 +3,8 @@ package com.readme.batch.requestObject;
 import lombok.Getter;
 
 @Getter
-public class RequestNovelViews {
+public class RequestPlusViewCount {
     private long novelId;
-    private long views;
+    private long episodeId;
+    private long plusCnt;
 }

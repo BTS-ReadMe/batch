@@ -5,7 +5,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.readme.batch.model.NovelCards;
 import com.readme.batch.repository.NovelCardsRepository;
+import com.readme.batch.requestObject.RequestPlusViewCount;
 import com.readme.batch.service.NovelCardsViewJobLauncher;
+import com.readme.batch.service.Producer;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,10 +29,16 @@ public class TestController {
     private final NovelCardsViewJobLauncher novelCardsViewJobLauncher;
     private final MongoTemplate mongoTemplate;
     private final NovelCardsRepository novelCardsRepository;
+    private final Producer producer;
+
+    @GetMapping("plus-view")
+    public void plusView(@RequestBody RequestPlusViewCount requestPlusViewCount) {
+        producer.sendPlusView(requestPlusViewCount);
+    }
     @GetMapping("/1")
     public void test1() {
         String kafka = "";
-        novelCardsViewJobLauncher.listener(kafka);
+        novelCardsViewJobLauncher.listener();
     }
 
     @GetMapping("/2")
