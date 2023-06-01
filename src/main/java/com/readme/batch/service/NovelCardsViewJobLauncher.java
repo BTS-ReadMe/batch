@@ -85,8 +85,7 @@ public class NovelCardsViewJobLauncher {
         }
     }
 
-//    @Scheduled(cron = "0 0 * * * ?")
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(cron = "0 0 * * * ?")
     public void rankingJobLauncher() throws Exception {
         Map<Long, Long> currentNovelViewsData = new HashMap<>(rankingViewCount);
         if (!currentNovelViewsData.isEmpty()) {
