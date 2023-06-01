@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class RankinController {
     private final NovelViewsService novelViewsService;
     @GetMapping
-    public List<ResponseRanking> getRanking() {
+    public ResponseRanking getRanking() {
         return novelViewsService.getRanking();
     }
 }
