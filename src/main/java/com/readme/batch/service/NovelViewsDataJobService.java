@@ -1,13 +1,9 @@
 package com.readme.batch.service;
 
-import com.readme.batch.dto.NovelViewDTO;
 import com.readme.batch.model.NovelViews;
 import com.readme.batch.repository.NovelViewsRepository;
 import java.io.IOException;
-import java.sql.Date;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,10 +23,7 @@ import org.springframework.batch.item.support.IteratorItemReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @RequiredArgsConstructor
 @Configuration
@@ -53,7 +46,7 @@ public class NovelViewsDataJobService {
     public Step novelViewsStep() throws Exception {
         try {
             return stepBuilderFactory.get("novelViewsStep")
-                .<Map.Entry<Long, NovelViewDTO>, NovelViews>chunk(
+                .<Map.Entry<Long, Long>, NovelViews>chunk(
                     500) // 앞의 NovelCards는 read에서 읽은 아이템의 타입, 뒤의 NovelCards는 write에게 전달할 아이템의 타입
                 .reader(novelViewsReader(null))
                 .processor(novelViewsProcessor())
@@ -67,27 +60,27 @@ public class NovelViewsDataJobService {
 
     @Bean
     @StepScope
-    public ItemReader<Entry<Long, NovelViewDTO>> novelViewsReader(
+    public ItemReader<Entry<Long, Long>> novelViewsReader(
         @Value("#{jobParameters['novelViewsData']}") String novelViewsMapStr) throws IOException {
-        Map<Long, NovelViewDTO> novelViewsMap = NovelCardsViewJobLauncher.deserializeNovelViewsDataMap(
+        Map<Long, Long> novelViewsMap = NovelCardsViewJobLauncher.deserializeNovelViewsMap(
             novelViewsMapStr);
         return new IteratorItemReader<>(novelViewsMap.entrySet().iterator());
     }
 
     @Bean
     @StepScope
-    public ItemProcessor<Entry<Long, NovelViewDTO>, NovelViews> novelViewsProcessor() {
+    public ItemProcessor<Entry<Long, Long>, NovelViews> novelViewsProcessor() {
         return item -> {
             Long novelId = item.getKey();
-            NovelViewDTO novelViewDTO = item.getValue();
+            Long viewCount = item.getValue();
             NovelViews novelViews = null;
             LocalDateTime timeWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
             if (novelViewsRepository.existsByNovelIdAndViewsDate(novelId, timeWithoutMinutesAndSeconds)) {
                 novelViews = novelViewsRepository.findByNovelIdAndViewsDate(novelId, timeWithoutMinutesAndSeconds);
             } else {
-                novelViews = new NovelViews(novelId, novelViewDTO.getTitle(), novelViewDTO.getThumbnail(), timeWithoutMinutesAndSeconds, 0L);
+                novelViews = new NovelViews(novelId, timeWithoutMinutesAndSeconds, 0L);
             }
-            novelViews.setViews(novelViews.getViews() + novelViewDTO.getPlusCnt());
+            novelViews.setViews(novelViews.getViews() + viewCount);
             return novelViews;
         };
     }

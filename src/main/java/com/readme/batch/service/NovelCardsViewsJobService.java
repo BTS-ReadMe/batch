@@ -49,6 +49,7 @@ public class NovelCardsViewsJobService {
     private final StepBuilderFactory stepBuilderFactory;
     private final MongoTemplate mongoTemplate;
     private final EpisodesRepository episodesRepository;
+    private final NovelViewsRepository novelViewsRepository;
 
     @Bean
     public TaskExecutor taskExecutor() {

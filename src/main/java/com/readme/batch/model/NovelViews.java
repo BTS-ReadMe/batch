@@ -27,19 +27,13 @@ public class NovelViews extends BaseTimeEntity {
     private Long id;
     @Column(name = "novelId")
     private Long novelId;
-    @Column(name = "title")
-    private String title;
-    @Column(name = "thumbnail")
-    private String thumbnail;
     @Column(name = "viewsDate")
     private LocalDateTime viewsDate;
     @Column(name = "views")
     private Long views;
 
-    public NovelViews(Long novelId, String title, String thumbnail, LocalDateTime viewsDate, Long views) {
+    public NovelViews(Long novelId, LocalDateTime viewsDate, Long views) {
         this.novelId = novelId;
-        this.title = title;
-        this.thumbnail = thumbnail;
         this.viewsDate = viewsDate;
         this.views = views;
     }

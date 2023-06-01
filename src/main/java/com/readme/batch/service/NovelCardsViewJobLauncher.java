@@ -3,8 +3,6 @@ package com.readme.batch.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.readme.batch.dto.NovelViewDTO;
-import com.readme.batch.dto.ViewCountDTO;
 import com.readme.batch.requestObject.RequestPlusViewCount;
 import java.io.IOException;
 import java.util.Date;
@@ -13,7 +11,6 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -28,7 +25,7 @@ public class NovelCardsViewJobLauncher {
 
     private Map<Long, Long> novelViewCount = new HashMap<>();
     private Map<Long, Long> episodeViewCount = new HashMap<>();
-    private Map<Long, NovelViewDTO> novelViewsDataCount = new HashMap<>();
+    private Map<Long, Long> rankingViewCount = new HashMap<>();
     private final JobLauncher jobLauncher;
     private final NovelCardsViewsJobService novelCardsViewsJobService;
     private final NovelViewsDataJobService novelViewsDataJobService;
@@ -44,14 +41,9 @@ public class NovelCardsViewJobLauncher {
             episodeViewCount.getOrDefault(requestPlusViewCount.getEpisodeId(), 0L)
                 + requestPlusViewCount.getPlusCnt());
 
-        updateNovelViewsDataCount(requestPlusViewCount);
-//        novelViewsDataCount.getOrDefault(requestPlusViewCount.getNovelId(),
-//            new NovelViewDTO(requestPlusViewCount));
-//        novelViewsDataCount.get(requestPlusViewCount.getNovelId())
-//            .setPlusCnt(novelViewsDataCount.get(requestPlusViewCount.getNovelId()).getPlusCnt() +
-//                requestPlusViewCount.getPlusCnt());
-//        novelViewsDataCount.put(requestPlusViewCount.getNovelId(),
-//            novelViewsDataCount.get(requestPlusViewCount.getNovelId()));
+        rankingViewCount.put(requestPlusViewCount.getNovelId(),
+            rankingViewCount.getOrDefault(requestPlusViewCount.getNovelId(), 0L)
+                + requestPlusViewCount.getPlusCnt());
     }
 
     public void plusViewJob(String plusViewString) throws Exception {
@@ -73,7 +65,7 @@ public class NovelCardsViewJobLauncher {
 
     }
 
-    @Scheduled(fixedRate = 60000)
+//    @Scheduled(fixedRate = 60000)
     public void listener() throws Exception {
         Map<Long, Long> currentNovelViews = new HashMap<>(novelViewCount);
         Map<Long, Long> currentEpisodeViews = new HashMap<>(episodeViewCount);
@@ -96,10 +88,10 @@ public class NovelCardsViewJobLauncher {
 //    @Scheduled(cron = "0 0 * * * ?")
     @Scheduled(fixedRate = 10000)
     public void rankingJobLauncher() throws Exception {
-        Map<Long, NovelViewDTO> currentNovelViewsData = new HashMap<>(novelViewsDataCount);
+        Map<Long, Long> currentNovelViewsData = new HashMap<>(rankingViewCount);
         if (!currentNovelViewsData.isEmpty()) {
-            String novelViewsDataString = serializeNovelViewsDataMap(novelViewsDataCount);
-            novelViewsDataCount.clear();
+            String novelViewsDataString = serializeNovelViewsMap(rankingViewCount);
+            rankingViewCount.clear();
             JobParameters jobParameters = new JobParametersBuilder()
                 .addString("novelViewsData", novelViewsDataString)
                 .addLong("timestamp", System.currentTimeMillis())
@@ -109,28 +101,7 @@ public class NovelCardsViewJobLauncher {
         }
     }
 
-    public void updateNovelViewsDataCount(RequestPlusViewCount request) {
-        long novelId = request.getNovelId();
-
-        if (novelViewsDataCount.containsKey(novelId)) {
-            NovelViewDTO existingDTO = novelViewsDataCount.get(novelId);
-            existingDTO.setPlusCnt(existingDTO.getPlusCnt() + request.getPlusCnt());
-        } else {
-            NovelViewDTO newDTO = new NovelViewDTO();
-            newDTO.setTitle(request.getTitle());
-            newDTO.setThumbnail(request.getThumbnail());
-            newDTO.setPlusCnt(request.getPlusCnt());
-
-            novelViewsDataCount.put(novelId, newDTO);
-        }
-    }
-
     public String serializeNovelViewsMap(Map<Long, Long> novelViewsMap)
-        throws JsonProcessingException {
-        return objectMapper.writeValueAsString(novelViewsMap);
-    }
-
-    public String serializeNovelViewsDataMap(Map<Long, NovelViewDTO> novelViewsMap)
         throws JsonProcessingException {
         return objectMapper.writeValueAsString(novelViewsMap);
     }
@@ -139,13 +110,6 @@ public class NovelCardsViewJobLauncher {
         throws IOException {
         return objectMapper.readValue(novelViewsMapStr,
             new TypeReference<Map<Long, Long>>() {
-            });
-    }
-
-    public static Map<Long, NovelViewDTO> deserializeNovelViewsDataMap(String novelViewsMapStr)
-        throws IOException {
-        return objectMapper.readValue(novelViewsMapStr,
-            new TypeReference<Map<Long, NovelViewDTO>>() {
             });
     }
 }
