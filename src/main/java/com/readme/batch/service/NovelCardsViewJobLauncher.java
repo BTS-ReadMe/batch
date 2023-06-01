@@ -27,6 +27,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class NovelCardsViewJobLauncher {
     private Map<Long, Long> novelViewCount = new HashMap<>();
     private Map<Long, Long> episodeViewCount = new HashMap<>();
+    private Map<Long, NovelViewDTO> novelViewsDataCount = new HashMap<>();
     private final JobLauncher jobLauncher;
     private final NovelCardsViewsJobService novelCardsViewsJobService;
     private static final ObjectMapper objectMapper = new ObjectMapper();

@@ -19,6 +19,8 @@ public class NovelViews extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long novelId;
+    private String title;
+    private String thumbnail;
     private Date viewsDate;
     private Long views;
 

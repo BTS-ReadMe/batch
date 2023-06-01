@@ -7,13 +7,13 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class NovelViewDTO {
-    private long novelId;
-    private long episodeId;
+    private String title;
+    private String thumbnail;
     private long plusCnt;
 
     public NovelViewDTO(RequestPlusViewCount requestPlusViewCount) {
-        this.novelId = requestPlusViewCount.getNovelId();
-        this.episodeId = requestPlusViewCount.getEpisodeId();
+        this.title = requestPlusViewCount.getTitle();
+        this.thumbnail = requestPlusViewCount.getThumbnail();
         this.plusCnt = requestPlusViewCount.getPlusCnt();
     }
 }
