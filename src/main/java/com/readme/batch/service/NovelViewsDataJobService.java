@@ -91,7 +91,7 @@ public class NovelViewsDataJobService {
         return new ItemWriter<NovelViews>() {
             @Override
             public void write(List<? extends NovelViews> items) throws Exception {
-                novelViewsRepository.save(items.get(0));
+                novelViewsRepository.saveAll(items);
             }
         };
     }

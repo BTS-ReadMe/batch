@@ -181,7 +181,7 @@ public class NovelCardsViewsJobService {
         return new ItemWriter<Episodes>() {
             @Override
             public void write(List<? extends Episodes> items) throws Exception {
-                episodesRepository.save(items.get(0));
+                episodesRepository.saveAll(items);
             }
         };
     }
