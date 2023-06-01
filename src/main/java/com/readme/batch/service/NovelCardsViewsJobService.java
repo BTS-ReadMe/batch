@@ -49,7 +49,6 @@ public class NovelCardsViewsJobService {
     private final StepBuilderFactory stepBuilderFactory;
     private final MongoTemplate mongoTemplate;
     private final EpisodesRepository episodesRepository;
-    private final NovelViewsRepository novelViewsRepository;
 
     @Bean
     public TaskExecutor taskExecutor() {
@@ -73,12 +72,6 @@ public class NovelCardsViewsJobService {
             .build();
     }
 
-    @Bean Flow novelViewsFlow() throws Exception {
-        return new FlowBuilder<SimpleFlow>("novelViewsFlow")
-            .start(novelViewsStep())
-            .build();
-    }
-
     @Bean
     public Flow episodeViewsFlow() throws Exception {
         return new FlowBuilder<SimpleFlow>("episodeViewsFlow")
@@ -89,7 +82,7 @@ public class NovelCardsViewsJobService {
     @Bean Flow doItParallelSteps() throws Exception {
         return new FlowBuilder<Flow>("doItParallelSteps")
             .split(new SimpleAsyncTaskExecutor())
-            .add(novelCardsViewsFlow(), episodeViewsFlow(), novelViewsFlow()) // 동시에 실행될 flow 들을 넣어줍니다.
+            .add(novelCardsViewsFlow(), episodeViewsFlow()) // 동시에 실행될 flow 들을 넣어줍니다.
             .build();
     }
 
@@ -103,24 +96,6 @@ public class NovelCardsViewsJobService {
                 .reader(novelCardsReader(null))
                 .processor(novelCardsProcessor())
                 .writer(novelCardsWriter())
-                .taskExecutor(taskExecutor())
-                .build();
-        } catch (EmptyResultDataAccessException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    @Bean
-    @Scope("singleton")
-    public Step novelViewsStep() throws Exception {
-        try {
-            return stepBuilderFactory.get("noveViewsStep")
-                .<Map.Entry<Long, Long>, NovelViews>chunk(
-                    500) // 앞의 NovelCards는 read에서 읽은 아이템의 타입, 뒤의 NovelCards는 write에게 전달할 아이템의 타입
-                .reader(novelViewsReader(null))
-                .processor(novelViewsProcessor())
-                .writer(novelViewsWriter())
                 .taskExecutor(taskExecutor())
                 .build();
         } catch (EmptyResultDataAccessException e) {
@@ -156,15 +131,6 @@ public class NovelCardsViewsJobService {
 
     @Bean
     @StepScope
-    public ItemReader<Map.Entry<Long, Long>> novelViewsReader(
-        @Value("#{jobParameters['novelViewsMapStr']}") String novelViewsMapStr) throws IOException {
-        Map<Long, Long> novelViewsMap = NovelCardsViewJobLauncher.deserializeNovelViewsMap(
-            novelViewsMapStr);
-        return new IteratorItemReader<>(novelViewsMap.entrySet().iterator());
-    }
-
-    @Bean
-    @StepScope
     public ItemReader<Map.Entry<Long, Long>> episodeCardsReader(
         @Value("#{jobParameters['episodeViewsMapStr']}") String episodeViewsMapStr)
         throws IOException {
@@ -189,27 +155,6 @@ public class NovelCardsViewsJobService {
 
     @Bean
     @StepScope
-    public ItemProcessor<Map.Entry<Long, Long>, NovelViews> novelViewsProcessor() {
-        return item -> {
-            Long novelId = item.getKey();
-            Long viewCount = item.getValue();
-            NovelViews novelViews = null;
-            LocalDate date = LocalDate.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            String formattedDate = date.format(formatter);
-            Date nowFormatDate = Date.valueOf(formattedDate);
-            if (novelViewsRepository.existsByNovelIdAndViewsDate(novelId, nowFormatDate)) {
-                novelViews = novelViewsRepository.findByNovelIdAndViewsDate(novelId, nowFormatDate);
-            } else {
-                novelViews = new NovelViews(novelId, nowFormatDate, 0L);
-            }
-            novelViews.setViews(novelViews.getViews() + viewCount);
-            return novelViews;
-        };
-    }
-
-    @Bean
-    @StepScope
     public ItemProcessor<Map.Entry<Long, Long>, Episodes> episodesProcessor() {
         return item -> {
             Long episodeId = item.getKey();
@@ -227,17 +172,6 @@ public class NovelCardsViewsJobService {
             .template(mongoTemplate)
             .collection("novel_cards")
             .build();
-    }
-
-    @Bean
-    @StepScope
-    public ItemWriter<NovelViews> novelViewsWriter() throws Exception {
-        return new ItemWriter<NovelViews>() {
-            @Override
-            public void write(List<? extends NovelViews> items) throws Exception {
-                novelViewsRepository.save(items.get(0));
-            }
-        };
     }
 
     @Bean

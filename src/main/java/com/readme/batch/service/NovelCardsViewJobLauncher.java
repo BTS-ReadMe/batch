@@ -25,19 +25,33 @@ import org.springframework.scheduling.annotation.Scheduled;
 @Configuration
 @Slf4j
 public class NovelCardsViewJobLauncher {
+
     private Map<Long, Long> novelViewCount = new HashMap<>();
     private Map<Long, Long> episodeViewCount = new HashMap<>();
     private Map<Long, NovelViewDTO> novelViewsDataCount = new HashMap<>();
     private final JobLauncher jobLauncher;
     private final NovelCardsViewsJobService novelCardsViewsJobService;
+    private final NovelViewsDataJobService novelViewsDataJobService;
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @KafkaListener(topics = "plusViewCount", groupId = "batch")
     public void plusViewCount(RequestPlusViewCount requestPlusViewCount) {
         novelViewCount.put(requestPlusViewCount.getNovelId(),
-            novelViewCount.getOrDefault(requestPlusViewCount.getNovelId(), 0L) + 1L);
+            novelViewCount.getOrDefault(requestPlusViewCount.getNovelId(), 0L)
+                + requestPlusViewCount.getPlusCnt());
+
         episodeViewCount.put(requestPlusViewCount.getEpisodeId(),
-            episodeViewCount.getOrDefault(requestPlusViewCount.getEpisodeId(), 0L) + 1L);
+            episodeViewCount.getOrDefault(requestPlusViewCount.getEpisodeId(), 0L)
+                + requestPlusViewCount.getPlusCnt());
+
+        updateNovelViewsDataCount(requestPlusViewCount);
+//        novelViewsDataCount.getOrDefault(requestPlusViewCount.getNovelId(),
+//            new NovelViewDTO(requestPlusViewCount));
+//        novelViewsDataCount.get(requestPlusViewCount.getNovelId())
+//            .setPlusCnt(novelViewsDataCount.get(requestPlusViewCount.getNovelId()).getPlusCnt() +
+//                requestPlusViewCount.getPlusCnt());
+//        novelViewsDataCount.put(requestPlusViewCount.getNovelId(),
+//            novelViewsDataCount.get(requestPlusViewCount.getNovelId()));
     }
 
     public void plusViewJob(String plusViewString) throws Exception {
@@ -76,20 +90,47 @@ public class NovelCardsViewJobLauncher {
                 .toJobParameters();
             JobExecution jobExecution = jobLauncher.run(
                 novelCardsViewsJobService.novelCardsViewsJob(null), jobParameters);
-//            log.info("Job Execution: " + jobExecution.getStatus());
-//            log.info("Job getJobConfigurationName: " + jobExecution.getJobConfigurationName());
-//            log.info("Job getJobId: " + jobExecution.getJobId());
-//            log.info("Job getExitStatus: " + jobExecution.getExitStatus());
-//            log.info("Job getJobInstance: " + jobExecution.getJobInstance());
-//            log.info("Job getStepExecutions: " + jobExecution.getStepExecutions());
-//            log.info("Job getLastUpdated: " + jobExecution.getLastUpdated());
-//            log.info("Job getFailureExceptions: " + jobExecution.getFailureExceptions());
-//            log.info("종료 시간: " + new Date());
         }
+    }
 
+//    @Scheduled(cron = "0 0 * * * ?")
+    @Scheduled(fixedRate = 10000)
+    public void rankingJobLauncher() throws Exception {
+        Map<Long, NovelViewDTO> currentNovelViewsData = new HashMap<>(novelViewsDataCount);
+        if (!currentNovelViewsData.isEmpty()) {
+            String novelViewsDataString = serializeNovelViewsDataMap(novelViewsDataCount);
+            novelViewsDataCount.clear();
+            JobParameters jobParameters = new JobParametersBuilder()
+                .addString("novelViewsData", novelViewsDataString)
+                .addLong("timestamp", System.currentTimeMillis())
+                .toJobParameters();
+            JobExecution jobExecution = jobLauncher.run(
+                novelViewsDataJobService.novelViewsDataJob(), jobParameters);
+        }
+    }
+
+    public void updateNovelViewsDataCount(RequestPlusViewCount request) {
+        long novelId = request.getNovelId();
+
+        if (novelViewsDataCount.containsKey(novelId)) {
+            NovelViewDTO existingDTO = novelViewsDataCount.get(novelId);
+            existingDTO.setPlusCnt(existingDTO.getPlusCnt() + request.getPlusCnt());
+        } else {
+            NovelViewDTO newDTO = new NovelViewDTO();
+            newDTO.setTitle(request.getTitle());
+            newDTO.setThumbnail(request.getThumbnail());
+            newDTO.setPlusCnt(request.getPlusCnt());
+
+            novelViewsDataCount.put(novelId, newDTO);
+        }
     }
 
     public String serializeNovelViewsMap(Map<Long, Long> novelViewsMap)
+        throws JsonProcessingException {
+        return objectMapper.writeValueAsString(novelViewsMap);
+    }
+
+    public String serializeNovelViewsDataMap(Map<Long, NovelViewDTO> novelViewsMap)
         throws JsonProcessingException {
         return objectMapper.writeValueAsString(novelViewsMap);
     }
@@ -98,6 +139,13 @@ public class NovelCardsViewJobLauncher {
         throws IOException {
         return objectMapper.readValue(novelViewsMapStr,
             new TypeReference<Map<Long, Long>>() {
+            });
+    }
+
+    public static Map<Long, NovelViewDTO> deserializeNovelViewsDataMap(String novelViewsMapStr)
+        throws IOException {
+        return objectMapper.readValue(novelViewsMapStr,
+            new TypeReference<Map<Long, NovelViewDTO>>() {
             });
     }
 }
