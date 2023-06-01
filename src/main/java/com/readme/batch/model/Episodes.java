@@ -1,5 +1,6 @@
 package com.readme.batch.model;
 
+import com.readme.batch.utils.BaseTimeEntity;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,8 +21,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @Setter
 @NoArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-public class Episodes {
+public class Episodes extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,9 +32,4 @@ public class Episodes {
     private Boolean free;
     private LocalDateTime registration;
     private String status;
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createDate;
-    @LastModifiedDate
-    private LocalDateTime updateDate;
 }
