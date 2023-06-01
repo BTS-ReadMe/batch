@@ -5,6 +5,7 @@ import com.readme.batch.repository.NovelViewsRepository;
 import com.readme.batch.responseObject.ResponseRanking;
 import com.readme.batch.service.NovelViewsService;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

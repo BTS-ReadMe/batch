@@ -10,17 +10,17 @@ public class ResponseRanking {
     private Long novelId;
     private String title;
     private String thumbnail;
-    private LocalDateTime viewsDate;
-    private Long views;
+    private String viewsDate;
     private Integer ranking;
+    private Integer changeRanking;
 
-    public ResponseRanking(Long novelId, String title, String thumbnail, LocalDateTime viewsDate,
-        Long views, Integer ranking) {
+    public ResponseRanking(Long novelId, String title, String thumbnail, String viewsDate,
+        Integer ranking, Integer changeRanking) {
         this.novelId = novelId;
         this.title = title;
         this.thumbnail = thumbnail;
         this.viewsDate = viewsDate;
-        this.views = views;
         this.ranking = ranking;
+        this.changeRanking = changeRanking;
     }
 }
