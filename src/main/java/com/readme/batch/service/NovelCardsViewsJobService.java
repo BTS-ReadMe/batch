@@ -2,8 +2,13 @@ package com.readme.batch.service;
 
 import com.readme.batch.model.Episodes;
 import com.readme.batch.model.NovelCards;
+import com.readme.batch.model.NovelViews;
 import com.readme.batch.repository.EpisodesRepository;
+import com.readme.batch.repository.NovelViewsRepository;
 import java.io.IOException;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +17,6 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -45,6 +49,7 @@ public class NovelCardsViewsJobService {
     private final StepBuilderFactory stepBuilderFactory;
     private final MongoTemplate mongoTemplate;
     private final EpisodesRepository episodesRepository;
+    private final NovelViewsRepository novelViewsRepository;
 
     @Bean
     public TaskExecutor taskExecutor() {
@@ -176,7 +181,7 @@ public class NovelCardsViewsJobService {
         return new ItemWriter<Episodes>() {
             @Override
             public void write(List<? extends Episodes> items) throws Exception {
-                episodesRepository.save(items.get(0));
+                episodesRepository.saveAll(items);
             }
         };
     }
