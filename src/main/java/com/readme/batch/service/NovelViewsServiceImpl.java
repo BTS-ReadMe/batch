@@ -5,9 +5,12 @@ import com.readme.batch.repository.NovelViewsRepository;
 import com.readme.batch.responseObject.ResponseRanking;
 import com.readme.batch.responseObject.ResponseRanking.NovelRankingData;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +44,8 @@ public class NovelViewsServiceImpl implements NovelViewsService {
     public static String getUtcToKoreanTime() {
         LocalDateTime nowWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0)
             .withNano(0);
+        ZonedDateTime koreanTime = nowWithoutMinutesAndSeconds.atZone(ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("Asia/Seoul"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        return formatter.format(nowWithoutMinutesAndSeconds);
+        return formatter.format(koreanTime);
     }
 }
