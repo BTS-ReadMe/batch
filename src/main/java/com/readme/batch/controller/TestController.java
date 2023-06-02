@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,12 +33,12 @@ public class TestController {
     private final NovelCardsRepository novelCardsRepository;
     private final Producer producer;
 
-    @GetMapping("plus-view")
+    @PostMapping("plus-view")
     public void plusView(@RequestBody RequestPlusViewCount requestPlusViewCount) {
         producer.sendPlusView(requestPlusViewCount);
     }
 
-    @GetMapping("test-plus-view")
+    @PostMapping("test-plus-view")
     public void testPlusView(@RequestBody RequestPlusViewString requestPlusViewString) throws Exception {
         novelCardsViewJobLauncher.plusViewJob(requestPlusViewString.getPlusViewString());
     }
