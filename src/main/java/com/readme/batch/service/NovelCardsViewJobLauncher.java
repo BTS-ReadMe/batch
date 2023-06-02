@@ -65,7 +65,7 @@ public class NovelCardsViewJobLauncher {
 
     }
 
-//    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000)
     public void listener() throws Exception {
         Map<Long, Long> currentNovelViews = new HashMap<>(novelViewCount);
         Map<Long, Long> currentEpisodeViews = new HashMap<>(episodeViewCount);
@@ -85,7 +85,8 @@ public class NovelCardsViewJobLauncher {
         }
     }
 
-    @Scheduled(cron = "0 0 * * * ?")
+    //    @Scheduled(cron = "0 0 * * * ?")
+    @Scheduled(fixedRate = 60000)
     public void rankingJobLauncher() throws Exception {
         Map<Long, Long> currentNovelViewsData = new HashMap<>(rankingViewCount);
         if (!currentNovelViewsData.isEmpty()) {
