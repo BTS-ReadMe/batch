@@ -60,9 +60,4 @@ public class TestController {
             novelCardsRepository.save(novelCards);
         });
     }
-
-    @PostMapping("/search")
-    public void search(@RequestParam String keyword) {
-        producer.sendSearch(keyword);
-    }
 }
