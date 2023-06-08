@@ -73,6 +73,8 @@ public class SearchCountJobService {
     public ItemProcessor<Entry<String, Long>, Search> searchCountProcessor() {
         return item -> {
             String keyword = item.getKey();
+            keyword = keyword.replaceAll("\"", "");
+            log.info(keyword);
             Long count = item.getValue();
             LocalDateTime timeWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
             Optional<Search> optionalSearch = searchRepository.findByKeywordAndSearchDate(keyword, timeWithoutMinutesAndSeconds);

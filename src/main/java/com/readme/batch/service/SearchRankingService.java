@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SearchRankingService {
     private Map<String, Long> searchCount = new HashMap<>();
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -29,6 +31,7 @@ public class SearchRankingService {
         String keyword = responseSearch.getKeyword();
         long count = responseSearch.getCount();
         searchCount.put(keyword, searchCount.getOrDefault(keyword, 0L) + count);
+        log.info("map: " + searchCount.toString());
     }
 
     @Scheduled(fixedRate = 10000)
@@ -36,6 +39,7 @@ public class SearchRankingService {
         Map<String, Long> currentSearchCount = new HashMap<>(searchCount);
         if (!currentSearchCount.isEmpty()) {
             String searchCountDataString = serializeSearchCountMap(searchCount);
+            log.info("searchCountDataString : " + searchCountDataString);
             searchCount.clear();
             JobParameters jobParameters = new JobParametersBuilder()
                 .addString("searchCount", searchCountDataString)
