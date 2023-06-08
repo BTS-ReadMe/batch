@@ -1,6 +1,7 @@
 package com.readme.batch.config;
 
 import com.readme.batch.requestObject.RequestPlusViewCount;
+import com.readme.batch.responseObject.ResponseSearch;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,9 +23,13 @@ public class KafkaConsumerConfig {
     public Map<String, Object> ConsumerConfig() {
         return CommonJsonDeserializer.getStringObjectMap(servers);
     }
-
     @Bean
     public ConsumerFactory<String, RequestPlusViewCount> viewCountFactory() {
+        return new DefaultKafkaConsumerFactory<>(ConsumerConfig());
+    }
+
+    @Bean
+    public ConsumerFactory<String, ResponseSearch> searchFactory() {
         return new DefaultKafkaConsumerFactory<>(ConsumerConfig());
     }
 
@@ -32,6 +37,13 @@ public class KafkaConsumerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, RequestPlusViewCount> viewCountListener() {
         ConcurrentKafkaListenerContainerFactory<String, RequestPlusViewCount> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(viewCountFactory());
+        return factory;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, ResponseSearch> searchListener() {
+        ConcurrentKafkaListenerContainerFactory<String, ResponseSearch> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(searchFactory());
         return factory;
     }
 
