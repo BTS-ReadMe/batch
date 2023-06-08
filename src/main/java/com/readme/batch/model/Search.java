@@ -27,4 +27,10 @@ public class Search extends BaseTimeEntity {
     Long count;
     @Column(name = "search_date")
     private LocalDateTime searchDate;
+
+    public Search(String keyword, Long count, LocalDateTime searchDate) {
+        this.keyword = keyword;
+        this.count = count;
+        this.searchDate = searchDate;
+    }
 }
