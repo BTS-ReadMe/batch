@@ -1,7 +1,7 @@
 package com.readme.batch.service;
 
-import com.readme.batch.model.Search;
-import com.readme.batch.repository.SearchRepository;
+import com.readme.batch.model.SearchData;
+import com.readme.batch.repository.SearchDataRepository;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,7 +33,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 public class SearchCountJobService {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
-    private final SearchRepository searchRepository;
+    private final SearchDataRepository searchDataRepository;
 
     @Bean
     public Job searchCountJob() throws Exception {
@@ -47,7 +47,7 @@ public class SearchCountJobService {
     public Step searchCountStep() throws Exception {
         try {
             return stepBuilderFactory.get("searchCountStep")
-                .<Map.Entry<String, Long>, Search>chunk(
+                .<Map.Entry<String, Long>, SearchData>chunk(
                     500) // 앞의 NovelCards는 read에서 읽은 아이템의 타입, 뒤의 NovelCards는 write에게 전달할 아이템의 타입
                 .reader(searchCountReader(null))
                 .processor(searchCountProcessor())
@@ -70,32 +70,32 @@ public class SearchCountJobService {
 
     @Bean
     @StepScope
-    public ItemProcessor<Entry<String, Long>, Search> searchCountProcessor() {
+    public ItemProcessor<Entry<String, Long>, SearchData> searchCountProcessor() {
         return item -> {
             String keyword = item.getKey();
             keyword = keyword.replaceAll("\"", "");
             log.info(keyword);
             Long count = item.getValue();
             LocalDateTime timeWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
-            Optional<Search> optionalSearch = searchRepository.findByKeywordAndSearchDate(keyword, timeWithoutMinutesAndSeconds);
-            Search search = null;
+            Optional<SearchData> optionalSearch = searchDataRepository.findByKeywordAndSearchDate(keyword, timeWithoutMinutesAndSeconds);
+            SearchData searchData = null;
             if (optionalSearch.isPresent()) {
-                search = optionalSearch.get();
-                search.setCount(search.getCount() + count);
+                searchData = optionalSearch.get();
+                searchData.setCount(searchData.getCount() + count);
             } else {
-                search = new Search(keyword, count, timeWithoutMinutesAndSeconds);
+                searchData = new SearchData(keyword, count, timeWithoutMinutesAndSeconds);
             }
-            return search;
+            return searchData;
         };
     }
 
     @Bean
     @StepScope
-    public ItemWriter<Search> searchCountWriter() throws Exception {
-        return new ItemWriter<Search>() {
+    public ItemWriter<SearchData> searchCountWriter() throws Exception {
+        return new ItemWriter<SearchData>() {
             @Override
-            public void write(List<? extends Search> items) throws Exception {
-                searchRepository.saveAll(items);
+            public void write(List<? extends SearchData> items) throws Exception {
+                searchDataRepository.saveAll(items);
             }
         };
     }
