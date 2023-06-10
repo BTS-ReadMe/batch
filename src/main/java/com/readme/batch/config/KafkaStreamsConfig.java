@@ -72,4 +72,5 @@ public class KafkaStreamsConfig {
             .to(outputTopic, Produced.with(Serdes.String(), responseSearchSerde));
         return stream;
     }
+    
 }
