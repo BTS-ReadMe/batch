@@ -3,11 +3,19 @@ package com.readme.batch.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.readme.batch.model.Episodes;
+import com.readme.batch.model.NovelCards;
+import com.readme.batch.model.NovelViews;
+import com.readme.batch.repository.EpisodesRepository;
+import com.readme.batch.repository.NovelCardsRepository;
+import com.readme.batch.repository.NovelViewsRepository;
 import com.readme.batch.requestObject.RequestPlusViewCount;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
@@ -29,6 +37,9 @@ public class NovelCardsViewJobLauncher {
     private final JobLauncher jobLauncher;
     private final NovelCardsViewsJobService novelCardsViewsJobService;
     private final NovelViewsDataJobService novelViewsDataJobService;
+    private final NovelCardsRepository novelCardsRepository;
+    private final EpisodesRepository episodesRepository;
+    private final NovelViewsRepository novelViewsRepository;
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @KafkaListener(topics = "plusViewCount", groupId = "batch")
@@ -44,6 +55,29 @@ public class NovelCardsViewJobLauncher {
         rankingViewCount.put(requestPlusViewCount.getNovelId(),
             rankingViewCount.getOrDefault(requestPlusViewCount.getNovelId(), 0L)
                 + requestPlusViewCount.getPlusCnt());
+    }
+
+//    @KafkaListener(topics = "plusViewCount", groupId = "batch")
+    public void savePlusViewCount(RequestPlusViewCount requestPlusViewCount) {
+        NovelCards novelCards = novelCardsRepository.findById(
+            String.valueOf(requestPlusViewCount.getNovelId())).get();
+        Episodes episodes = episodesRepository.findById(requestPlusViewCount.getEpisodeId()).get();
+        NovelViews novelViews = null;
+        LocalDateTime nowTime = SearchServiceImpl.getMinusTimeWithoutMinutesAndSeconds(0);
+        if (novelViewsRepository.existsByNovelIdAndViewsDate(requestPlusViewCount.getNovelId(), nowTime)) {
+            novelViews = novelViewsRepository.findByNovelIdAndViewsDate(
+                requestPlusViewCount.getNovelId(), nowTime);
+        } else {
+            novelViews = new NovelViews(requestPlusViewCount.getNovelId(), nowTime, 0L);
+        }
+
+        novelCards.setViews(novelCards.getViews() + requestPlusViewCount.getPlusCnt());
+        episodes.setViews(episodes.getViews() + requestPlusViewCount.getPlusCnt());
+        novelViews.setViews(novelViews.getViews() + requestPlusViewCount.getPlusCnt());
+
+        novelCardsRepository.save(novelCards);
+        episodesRepository.save(episodes);
+        novelViewsRepository.save(novelViews);
     }
 
     public void plusViewJob(String plusViewString) throws Exception {

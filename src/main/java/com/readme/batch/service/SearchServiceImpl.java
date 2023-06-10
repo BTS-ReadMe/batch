@@ -48,7 +48,7 @@ public class SearchServiceImpl implements SearchService{
         searchDataRepository.save(searchData);
     }
 
-    public LocalDateTime getMinusTimeWithoutMinutesAndSeconds(int minusHour) {
+    public static LocalDateTime getMinusTimeWithoutMinutesAndSeconds(int minusHour) {
         LocalDateTime nowWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0)
             .withNano(0);
         return nowWithoutMinutesAndSeconds.minusHours(minusHour);
