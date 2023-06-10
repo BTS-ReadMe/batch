@@ -8,6 +8,7 @@ import com.readme.batch.responseObject.ResponseSearchRanking.SearchRankingData;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +22,8 @@ public class SearchServiceImpl implements SearchService{
 
     @Override
     public ResponseSearchRanking getSearchRanking() {
-        LocalDateTime nowWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0)
-            .withNano(0);
-        LocalDateTime oneHourAgo = nowWithoutMinutesAndSeconds.minusHours(1);
-        LocalDateTime twoHourAgo = nowWithoutMinutesAndSeconds.minusHours(2);
+        LocalDateTime oneHourAgo = getMinusTimeWithoutMinutesAndSeconds(1);
+        LocalDateTime twoHourAgo = getMinusTimeWithoutMinutesAndSeconds(2);
         List<ISearch> oneAgoList = searchDataRepository.findTop10(oneHourAgo);
         List<ISearch> twoAgoList = searchDataRepository.findTop10(twoHourAgo);
         Map<String, Integer> previousMap = twoAgoList.stream()
@@ -33,5 +32,25 @@ public class SearchServiceImpl implements SearchService{
             .map(current -> new SearchRankingData(current, previousMap.getOrDefault(current.getKeyword(), null) != null ?
                 previousMap.get(current.getKeyword()) - current.getRanking() : null))
             .collect(Collectors.toList()));
+    }
+
+    @Override
+    public void saveSearchData(String keyword) {
+        LocalDateTime nowTime = getMinusTimeWithoutMinutesAndSeconds(0);
+        Optional<SearchData> optionalSearchData = searchDataRepository.findByKeywordAndSearchDate(keyword, nowTime);
+        SearchData searchData = null;
+        if (optionalSearchData.isPresent()) {
+            searchData = optionalSearchData.get();
+            searchData.setCount(searchData.getCount() + 1L);
+        } else {
+            searchData = new SearchData(keyword, 1L, nowTime);
+        }
+        searchDataRepository.save(searchData);
+    }
+
+    public LocalDateTime getMinusTimeWithoutMinutesAndSeconds(int minusHour) {
+        LocalDateTime nowWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0)
+            .withNano(0);
+        return nowWithoutMinutesAndSeconds.minusHours(minusHour);
     }
 }

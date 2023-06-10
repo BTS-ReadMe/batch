@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -25,6 +26,7 @@ public class SearchRankingService {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final JobLauncher jobLauncher;
     private final SearchCountJobService searchCountJobService;
+    private final SearchService searchService;
 
     @KafkaListener(topics = "outputSearch", groupId = "batch")
     public void getSearchCount(ResponseSearch responseSearch) {
@@ -32,6 +34,12 @@ public class SearchRankingService {
         long count = responseSearch.getCount();
         searchCount.put(keyword, searchCount.getOrDefault(keyword, 0L) + count);
         log.info("map: " + searchCount.toString());
+    }
+
+//    @KafkaListener(topics = "inputSearch", groupId = "batch")
+    public void saveSearchCount(ConsumerRecord<String, String> record) {
+        String keyword = record.value().replaceAll("\"", "");
+        searchService.saveSearchData(keyword);
     }
 
     @Scheduled(fixedRate = 10000)
