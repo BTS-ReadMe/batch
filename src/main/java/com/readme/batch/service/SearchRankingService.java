@@ -28,7 +28,7 @@ public class SearchRankingService {
     private final SearchCountJobService searchCountJobService;
     private final SearchService searchService;
 
-    @KafkaListener(topics = "outputSearch", groupId = "batch")
+//    @KafkaListener(topics = "outputSearch", groupId = "batch")
     public void getSearchCount(ResponseSearch responseSearch) {
         String keyword = responseSearch.getKeyword();
         long count = responseSearch.getCount();
@@ -36,13 +36,13 @@ public class SearchRankingService {
         log.info("map: " + searchCount.toString());
     }
 
-//    @KafkaListener(topics = "inputSearch", groupId = "batch")
+    @KafkaListener(topics = "inputSearch", groupId = "batch")
     public void saveSearchCount(ConsumerRecord<String, String> record) {
         String keyword = record.value().replaceAll("\"", "");
         searchService.saveSearchData(keyword);
     }
 
-    @Scheduled(fixedRate = 10000)
+//    @Scheduled(fixedRate = 10000)
     public void searchCountJobLauncher() throws Exception {
         Map<String, Long> currentSearchCount = new HashMap<>(searchCount);
         if (!currentSearchCount.isEmpty()) {
