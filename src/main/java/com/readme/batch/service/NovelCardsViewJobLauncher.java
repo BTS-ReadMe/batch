@@ -42,7 +42,7 @@ public class NovelCardsViewJobLauncher {
     private final NovelViewsRepository novelViewsRepository;
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-//    @KafkaListener(topics = "plusViewCount", groupId = "batch")
+    @KafkaListener(topics = "plusViewCount", groupId = "batch")
     public void plusViewCount(RequestPlusViewCount requestPlusViewCount) {
         novelViewCount.put(requestPlusViewCount.getNovelId(),
             novelViewCount.getOrDefault(requestPlusViewCount.getNovelId(), 0L)
@@ -57,7 +57,7 @@ public class NovelCardsViewJobLauncher {
                 + requestPlusViewCount.getPlusCnt());
     }
 
-    @KafkaListener(topics = "plusViewCount", groupId = "batch")
+//    @KafkaListener(topics = "plusViewCount", groupId = "batch")
     public void savePlusViewCount(RequestPlusViewCount requestPlusViewCount) {
         NovelCards novelCards = novelCardsRepository.findById(
             String.valueOf(requestPlusViewCount.getNovelId())).get();
@@ -99,7 +99,7 @@ public class NovelCardsViewJobLauncher {
 
     }
 
-//    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000)
     public void listener() throws Exception {
         Map<Long, Long> currentNovelViews = new HashMap<>(novelViewCount);
         Map<Long, Long> currentEpisodeViews = new HashMap<>(episodeViewCount);
@@ -120,7 +120,7 @@ public class NovelCardsViewJobLauncher {
     }
 
     //    @Scheduled(cron = "0 0 * * * ?")
-//    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000)
     public void rankingJobLauncher() throws Exception {
         Map<Long, Long> currentNovelViewsData = new HashMap<>(rankingViewCount);
         if (!currentNovelViewsData.isEmpty()) {
