@@ -6,17 +6,17 @@ import com.readme.batch.model.NovelViews;
 import com.readme.batch.repository.EpisodesRepository;
 import com.readme.batch.repository.NovelViewsRepository;
 import java.io.IOException;
-import java.sql.Date;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -62,7 +62,7 @@ public class NovelCardsViewsJobService {
 
     @Bean
     public Job novelCardsViewsJob(Flow episodeViewsFlow) throws Exception {
-        return jobBuilderFactory.get("novelCardsViewsJob")
+        return jobBuilderFactory.get("ViewsJob")
             .start(doItParallelSteps())
             .build().build();
     }
@@ -80,10 +80,17 @@ public class NovelCardsViewsJobService {
             .build();
     }
 
+    @Bean
+    public Flow rankingViewsFlow() throws Exception {
+        return new FlowBuilder<SimpleFlow>("rankingViewsFlow")
+            .start(RankingViewsStep())
+            .build();
+    }
+
     @Bean Flow doItParallelSteps() throws Exception {
         return new FlowBuilder<Flow>("doItParallelSteps")
             .split(new SimpleAsyncTaskExecutor())
-            .add(novelCardsViewsFlow(), episodeViewsFlow()) // 동시에 실행될 flow 들을 넣어줍니다.
+            .add(novelCardsViewsFlow(), episodeViewsFlow(), rankingViewsFlow()) // 동시에 실행될 flow 들을 넣어줍니다.
             .build();
     }
 
@@ -182,6 +189,61 @@ public class NovelCardsViewsJobService {
             @Override
             public void write(List<? extends Episodes> items) throws Exception {
                 episodesRepository.saveAll(items);
+            }
+        };
+    }
+
+    @Bean
+    @Scope("singleton")
+    public Step RankingViewsStep() throws Exception {
+        try {
+            return stepBuilderFactory.get("RankingViewsStep")
+                .<Map.Entry<Long, Long>, NovelViews>chunk(
+                    500) // 앞의 NovelCards는 read에서 읽은 아이템의 타입, 뒤의 NovelCards는 write에게 전달할 아이템의 타입
+                .reader(novelViewsReader(null))
+                .processor(novelViewsProcessor())
+                .writer(novelViewsWriter())
+                .build();
+        } catch (EmptyResultDataAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Bean
+    @StepScope
+    public ItemReader<Entry<Long, Long>> novelViewsReader(
+        @Value("#{jobParameters['rankingViewsMapStr']}") String novelViewsMapStr) throws IOException {
+        Map<Long, Long> novelViewsMap = NovelCardsViewJobLauncher.deserializeNovelViewsMap(
+            novelViewsMapStr);
+        return new IteratorItemReader<>(novelViewsMap.entrySet().iterator());
+    }
+
+    @Bean
+    @StepScope
+    public ItemProcessor<Entry<Long, Long>, NovelViews> novelViewsProcessor() {
+        return item -> {
+            Long novelId = item.getKey();
+            Long viewCount = item.getValue();
+            NovelViews novelViews = null;
+            LocalDateTime timeWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
+            if (novelViewsRepository.existsByNovelIdAndViewsDate(novelId, timeWithoutMinutesAndSeconds)) {
+                novelViews = novelViewsRepository.findByNovelIdAndViewsDate(novelId, timeWithoutMinutesAndSeconds);
+            } else {
+                novelViews = new NovelViews(novelId, timeWithoutMinutesAndSeconds, 0L);
+            }
+            novelViews.setViews(novelViews.getViews() + viewCount);
+            return novelViews;
+        };
+    }
+
+    @Bean
+    @StepScope
+    public ItemWriter<NovelViews> novelViewsWriter() throws Exception {
+        return new ItemWriter<NovelViews>() {
+            @Override
+            public void write(List<? extends NovelViews> items) throws Exception {
+                novelViewsRepository.saveAll(items);
             }
         };
     }

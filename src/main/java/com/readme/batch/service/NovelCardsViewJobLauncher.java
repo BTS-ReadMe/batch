@@ -36,7 +36,7 @@ public class NovelCardsViewJobLauncher {
     private Map<Long, Long> rankingViewCount = new HashMap<>();
     private final JobLauncher jobLauncher;
     private final NovelCardsViewsJobService novelCardsViewsJobService;
-    private final NovelViewsDataJobService novelViewsDataJobService;
+//    private final NovelViewsDataJobService novelViewsDataJobService;
     private final NovelCardsRepository novelCardsRepository;
     private final EpisodesRepository episodesRepository;
     private final NovelViewsRepository novelViewsRepository;
@@ -107,31 +107,18 @@ public class NovelCardsViewJobLauncher {
             log.info("시작 시간: " + new Date());
             String novelViewsMapStr = serializeNovelViewsMap(novelViewCount);
             String episodeViewsMapStr = serializeNovelViewsMap(episodeViewCount);
+            String rankingViewsMapStr = serializeNovelViewsMap(rankingViewCount);
             novelViewCount.clear();
             episodeViewCount.clear();
+            rankingViewCount.clear();
             JobParameters jobParameters = new JobParametersBuilder()
                 .addString("novelViewsMapStr", novelViewsMapStr)
                 .addString("episodeViewsMapStr", episodeViewsMapStr)
+                .addString("rankingViewsMapStr", rankingViewsMapStr)
                 .addLong("timestamp", System.currentTimeMillis())
                 .toJobParameters();
             JobExecution jobExecution = jobLauncher.run(
                 novelCardsViewsJobService.novelCardsViewsJob(null), jobParameters);
-        }
-    }
-
-    //    @Scheduled(cron = "0 0 * * * ?")
-    @Scheduled(fixedRate = 60000)
-    public void rankingJobLauncher() throws Exception {
-        Map<Long, Long> currentNovelViewsData = new HashMap<>(rankingViewCount);
-        if (!currentNovelViewsData.isEmpty()) {
-            String novelViewsDataString = serializeNovelViewsMap(rankingViewCount);
-            rankingViewCount.clear();
-            JobParameters jobParameters = new JobParametersBuilder()
-                .addString("novelViewsData", novelViewsDataString)
-                .addLong("timestamp", System.currentTimeMillis())
-                .toJobParameters();
-            JobExecution jobExecution = jobLauncher.run(
-                novelViewsDataJobService.novelViewsDataJob(), jobParameters);
         }
     }
 
