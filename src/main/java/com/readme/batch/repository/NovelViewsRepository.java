@@ -20,7 +20,7 @@ public interface NovelViewsRepository extends JpaRepository<NovelViews, Long> {
             "INNER JOIN novel_views ON novels.id = novel_views.novel_id " +
             "INNER JOIN main_category ON novels.genre = main_category.id " +
             "WHERE novel_views.views_date = :viewsDate " +
-            "LIMIT 15")
+            "LIMIT 10")
     List<INovelViews> findAllByViewsDateWithRank(@Param("viewsDate") LocalDateTime viewsDate);
 
 
