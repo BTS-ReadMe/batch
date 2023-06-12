@@ -27,10 +27,11 @@ public class NovelViewsServiceImpl implements NovelViewsService {
         LocalDateTime nowWithoutMinutesAndSeconds = LocalDateTime.now().withMinute(0).withSecond(0)
             .withNano(0);
         LocalDateTime oneHourAgo = nowWithoutMinutesAndSeconds.minusHours(1);
+        LocalDateTime twoHourAgo = nowWithoutMinutesAndSeconds.minusHours(2);
         List<INovelViews> currentList = novelViewsRepository.findAllByViewsDateWithRank(
-            nowWithoutMinutesAndSeconds);
-        List<INovelViews> previousList = novelViewsRepository.findAllByViewsDateWithRank(
             oneHourAgo);
+        List<INovelViews> previousList = novelViewsRepository.findAllByViewsDateWithRank(
+            twoHourAgo);
 
         Map<Long, Integer> previousMap = previousList.stream()
             .collect(Collectors.toMap(INovelViews::getId, INovelViews::getRanking));
