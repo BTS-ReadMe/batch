@@ -47,7 +47,7 @@ public class KafkaStreamsConfig {
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "search-keywords");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, ResponseSearchSerde.class);
         return new KafkaStreamsConfiguration(props);
     }
 
@@ -62,7 +62,8 @@ public class KafkaStreamsConfig {
         KStream<String, String> stream = builder.stream(inputTopic, Consumed.with(Serdes.String(), Serdes.String()));
         KTable<Windowed<String>, Long> countedKeywords = stream
             .groupBy((key, word) -> word, Grouped.with(Serdes.String(), Serdes.String()))
-            .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
+            .windowedBy(TimeWindows.of(Duration.ofSeconds(10)))
+//            .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
             .count();
 
         Serde<ResponseSearch> responseSearchSerde = new ResponseSearchSerde();
