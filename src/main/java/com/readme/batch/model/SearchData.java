@@ -11,24 +11,26 @@ import javax.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "search")
-public class Search extends BaseTimeEntity {
+@ToString
+@Table(name = "search_data")
+public class SearchData extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "keyword")
-    String keyword;
+    private String keyword;
     @Column(name = "count")
-    Long count;
+    private Long count;
     @Column(name = "search_date")
     private LocalDateTime searchDate;
 
-    public Search(String keyword, Long count, LocalDateTime searchDate) {
+    public SearchData(String keyword, Long count, LocalDateTime searchDate) {
         this.keyword = keyword;
         this.count = count;
         this.searchDate = searchDate;
