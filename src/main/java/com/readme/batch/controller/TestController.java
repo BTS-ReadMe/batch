@@ -37,9 +37,4 @@ public class TestController {
     public void plusView(@RequestBody RequestPlusViewCount requestPlusViewCount) {
         producer.sendPlusView(requestPlusViewCount);
     }
-
-    @PostMapping("test-plus-view")
-    public void testPlusView(@RequestBody RequestPlusViewString requestPlusViewString) throws Exception {
-        novelCardsViewJobLauncher.plusViewJob(requestPlusViewString.getPlusViewString());
-    }
 }
