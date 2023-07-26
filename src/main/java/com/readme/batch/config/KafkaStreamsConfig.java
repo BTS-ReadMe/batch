@@ -62,7 +62,6 @@ public class KafkaStreamsConfig {
         KStream<String, String> stream = builder.stream(inputTopic, Consumed.with(Serdes.String(), Serdes.String()));
         KTable<Windowed<String>, Long> countedKeywords = stream
             .groupBy((key, word) -> word, Grouped.with(Serdes.String(), Serdes.String()))
-//            .windowedBy(TimeWindows.of(Duration.ofSeconds(10)))
             .windowedBy(TimeWindows.of(Duration.ofMinutes(1)))
             .count();
 

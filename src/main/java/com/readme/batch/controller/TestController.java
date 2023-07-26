@@ -37,27 +37,4 @@ public class TestController {
     public void plusView(@RequestBody RequestPlusViewCount requestPlusViewCount) {
         producer.sendPlusView(requestPlusViewCount);
     }
-
-    @PostMapping("test-plus-view")
-    public void testPlusView(@RequestBody RequestPlusViewString requestPlusViewString) throws Exception {
-        novelCardsViewJobLauncher.plusViewJob(requestPlusViewString.getPlusViewString());
-    }
-
-    @GetMapping("/2")
-    public void test2() {
-        String kafkaMessage = "{\"1\":2,\"2\":2,\"3\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8,\"4\":5,\"5\":6,\"6\":7,\"7\":8}";
-        Map<String, Object> kafkaMap = new HashMap<>();
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            kafkaMap = mapper.readValue(kafkaMessage, new TypeReference<Map<String, Object>>() {
-            });
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        kafkaMap.forEach((novelId, viewsCount) -> {
-            NovelCards novelCards = novelCardsRepository.findById(novelId).get();
-            novelCards.setViews(novelCards.getViews()+Long.valueOf(String.valueOf(viewsCount)));
-            novelCardsRepository.save(novelCards);
-        });
-    }
 }
